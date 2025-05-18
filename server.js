@@ -13,6 +13,9 @@ const moodRouter = require("./router/mood");
 
 const app = express();
 
+// プロキシ設定を追加
+app.set('trust proxy', 1);
+
 // セキュリティミドルウェア
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
