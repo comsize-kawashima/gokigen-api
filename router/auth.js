@@ -18,22 +18,22 @@ router.post("/register", async (req, res) => {
   console.log("ハッシュ化されたパスワード:", hashedPassword);
 
   try {
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword,
-        profile: {
-          create: {
-            bio: "はじめまして",
-            profileImageUrl: defaultIconImage,
-          },
+  const user = await prisma.user.create({
+    data: {
+      username,
+      email,
+      password: hashedPassword,
+      profile: {
+        create: {
+          bio: "はじめまして",
+          profileImageUrl: defaultIconImage,
         },
       },
-      include: {
-        profile: true,
-      },
-    });
+    },
+    include: {
+      profile: true,
+    },
+  });
 
     // サインアップ成功時にトークンも返す
     const token = jwt.sign(
