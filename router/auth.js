@@ -10,31 +10,48 @@ const prisma = new PrismaClient();
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
-  const defaultIconImage = generateIdenticon(email); // 修正: 関数を使用
+  const defaultIconImage = generateIdenticon(email);
 
   //パスワードをハッシュ化
   const hashedPassword = await bcrypt.hash(password, 10);
 
   console.log("ハッシュ化されたパスワード:", hashedPassword);
 
-  const user = await prisma.user.create({
-    data: {
-      username,
-      email,
-      password: hashedPassword,
-      profile: {
-        create: {
-          bio: "はじめまして",
-          profileImageUrl: defaultIconImage,
+  try {
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+        profile: {
+          create: {
+            bio: "はじめまして",
+            profileImageUrl: defaultIconImage,
+          },
         },
       },
-    },
-    include: {
-      profile: true,
-    },
-  });
+      include: {
+        profile: true,
+      },
+    });
 
-  return res.json({ user });
+    // サインアップ成功時にトークンも返す
+    const token = jwt.sign(
+      { id: user.id },
+      process.env.SECRET_KEY || "default_secret",
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    return res.json({ user, token });
+  } catch (error) {
+    if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+      return res.status(400).json({ error: 'このメールアドレスは既に登録されています。' });
+    }
+    console.error("サインアップエラー:", error);
+    return res.status(500).json({ error: 'サインアップに失敗しました' });
+  }
 });
 
 //ユーザーログインAPI
